@@ -1,0 +1,20 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+.vite
+
+# local-only files
+scripts/.dev-store.json
+.netlify
+
+# editors
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
