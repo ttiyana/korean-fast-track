@@ -1,0 +1,23 @@
+name: Deploy to Netlify
+
+# Netlify builds the site itself (npm run build -> dist, functions from netlify/functions).
+# The hook URL is a repository secret, so it is never exposed in this public repo.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  trigger-netlify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask Netlify to build and deploy this commit
+        env:
+          HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "NETLIFY_BUILD_HOOK secret is not set — skipping (deploy manually with 'netlify deploy --prod')."
+            exit 0
+          fi
+          curl --fail --silent --show-error --request POST --data '{}' "$HOOK"
+          echo "Netlify build triggered."
