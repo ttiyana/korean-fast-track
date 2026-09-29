@@ -1,23 +1,38 @@
 name: Deploy to Netlify
 
-# Netlify builds the site itself (npm run build -> dist, functions from netlify/functions).
-# The hook URL is a repository secret, so it is never exposed in this public repo.
+# Deploys the production build to https://korean-fast-track.netlify.app.
+# Needs two repository secrets (Settings -> Secrets and variables -> Actions):
+#   NETLIFY_AUTH_TOKEN  - Netlify personal access token
+#   NETLIFY_SITE_ID     - a6fa8024-8aae-4414-81cc-859194e36263
+# Until they exist the job exits cleanly, so pushes never fail here. You can also deploy
+# manually at any time: `netlify deploy --prod`.
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
 jobs:
-  trigger-netlify:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Ask Netlify to build and deploy this commit
-        env:
-          HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type-check, test the function contract and build
         run: |
-          if [ -z "$HOOK" ]; then
-            echo "NETLIFY_BUILD_HOOK secret is not set — skipping (deploy manually with 'netlify deploy --prod')."
+          npm run build
+          npm run test:api
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then
+            echo "Netlify secrets are not set — skipping deploy."
+            echo "Set them (or link the repo in the Netlify UI) to enable automatic deploys."
             exit 0
           fi
-          curl --fail --silent --show-error --request POST --data '{}' "$HOOK"
-          echo "Netlify build triggered."
+          npx --yes netlify-cli@latest deploy --prod --dir=dist
