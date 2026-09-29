@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Btn, Ko, Panel, Pill, Bar } from "../components/ui"
+import { Btn, Ko, Panel, Bar } from "../components/ui"
 import { romanize } from "../lib/hangul"
 import { speak } from "../lib/speech"
-import { newCard, schedule, previewIntervals, retrievability, formatInterval } from "../lib/fsrs"
+import { newCard, schedule, previewIntervals, retrievability } from "../lib/fsrs"
 import type { Grade, CardState } from "../lib/fsrs"
-import { MODE_LABEL, kindLabel } from "../lib/deck"
 import type { Card, CardMode, Item } from "../lib/deck"
 import { dueSummary, todayKey, ensureDay } from "../lib/store"
 import type { AppState } from "../lib/store"
@@ -26,6 +25,7 @@ export default function Review({ state, setState, items }: Props) {
   const [tally, setTally] = useState({ again: 0, hard: 0, good: 0, easy: 0, minutes: 0 })
   const [finished, setFinished] = useState(false)
   const [recycled, setRecycled] = useState(0)
+  const [help, setHelp] = useState(false)
 
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items])
 
@@ -125,8 +125,8 @@ export default function Review({ state, setState, items }: Props) {
       <div>
         <h1 className="h1">Reviews</h1>
         <div className="ok" style={{ marginTop: 12 }}>
-          Nothing is due. That is the scheduler working — new cards are released at {state.settings.newPerDay}/day.
-          Come back later, or go and watch something: the Drama tab feeds this queue.
+          Nothing due. New cards are released at {state.settings.newPerDay}/day — come back later, or mine lines from a
+          drama.
         </div>
         <div className="row" style={{ marginTop: 16 }}>
           <Btn onClick={() => { queueRef.current = buildQueue(); setIndex(0); setFinished(false) }}>Rebuild queue</Btn>
@@ -141,7 +141,9 @@ export default function Review({ state, setState, items }: Props) {
     return (
       <div>
         <h1 className="h1">Session complete</h1>
-        <p className="sub">{totalGrades} reviews · {retention}% recalled · {recycled} cards recycled within the session.</p>
+        <p className="sub">
+          {totalGrades} reviews · {retention}% recalled
+        </p>
         <div className="grid c4">
           <Panel><div className="kicker">Again</div><div style={{ fontSize: 26 }}>{tally.again}</div></Panel>
           <Panel><div className="kicker">Hard</div><div style={{ fontSize: 26 }}>{tally.hard}</div></Panel>
@@ -159,55 +161,28 @@ export default function Review({ state, setState, items }: Props) {
 
   const item = current.item
   const mode: CardMode = current.card.mode
-  const helpVisible = !state.settings.reviewHelpDismissed
   const r = cardState.phase === "review" ? retrievability(cardState.stability, (Date.now() - (cardState.last ?? 0)) / 86400000) : null
 
   return (
     <div>
-      {helpVisible ? (
+      <div className="row between" style={{ marginBottom: 10 }}>
+        <span className="small mono">
+          {index + 1} / {queue.length}
+        </span>
+        <button className="speak" title="How this works" onClick={() => setHelp(!help)}>
+          ?
+        </button>
+      </div>
+      {help ? (
         <div className="howto">
-          <div className="row between" style={{ alignItems: "flex-start" }}>
-            <div>
-              <b>How a review works — three steps</b>
-              <ol>
-                <li>
-                  <b>Read the Korean and say it out loud</b>, even if you are guessing. Saying it is what moves it into
-                  your mouth, not just your eyes.
-                </li>
-                <li>
-                  <b>Tap “Show answer”</b> (or press <span className="mono">space</span>) to check yourself.
-                </li>
-                <li>
-                  <b>Grade yourself honestly</b> with the four buttons, or keys <span className="mono">1–4</span>. “Again”
-                  means you had no idea, “Easy” means it was instant.
-                </li>
-              </ol>
-              <div className="small">
-                Your grade is the only thing that decides when the card comes back — nothing here is a test you can fail.
-                Grading “Again” is useful information, not a penalty.
-              </div>
-            </div>
-            <Btn
-              className="tiny"
-              variant="ghost"
-              onClick={() => setState((s) => ({ ...s, settings: { ...s.settings, reviewHelpDismissed: true } }))}
-            >
-              Got it, hide this
-            </Btn>
+          <div>Say the Korean out loud, then reveal.</div>
+          <div>
+            Grade with the buttons — or keys <span className="mono">1</span> again, <span className="mono">2</span> hard,{" "}
+            <span className="mono">3</span> good, <span className="mono">4</span> easy.
           </div>
+          <div className="small">Your grade sets when the card returns. Nothing here can be failed.</div>
         </div>
       ) : null}
-
-      <div className="row between" style={{ marginBottom: 10 }}>
-        <div className="row" style={{ gap: 8 }}>
-          <Pill tone="amber">{kindLabel(item.kind)}</Pill>
-          <Pill>{MODE_LABEL[mode]}</Pill>
-          {item.tier ? <Pill tone="blue">tier {item.tier}</Pill> : null}
-        </div>
-        <span className="small mono">
-          card {index + 1} of {queue.length}
-        </span>
-      </div>
       <Bar value={index} max={queue.length} blue />
 
       <div className="card-face" style={{ marginTop: 14 }}>
@@ -226,11 +201,7 @@ export default function Review({ state, setState, items }: Props) {
                 ) : null}
                 {item.note ? <div className="small">{item.note}</div> : null}
               </>
-            ) : (
-              <div className="small">
-                Say it out loud — the meaning and the sound — then reveal to check yourself.
-              </div>
-            )}
+            ) : null}
           </>
         ) : null}
 
@@ -240,9 +211,7 @@ export default function Review({ state, setState, items }: Props) {
               <Btn variant="primary" onClick={() => speak(item.ko, { rate: 0.85 })}>▶ Play (slow)</Btn>
               <Btn onClick={() => speak(item.ko, { rate: 1 })}>▶ Normal speed</Btn>
             </div>
-            <div className="small">
-              {revealed ? "Check your guess:" : "What did you hear? Play it again if you need to."}
-            </div>
+            {revealed ? <div className="small">You guessed:</div> : null}
             {revealed ? (
               <>
                 <Ko text={item.ko} size="mid" showRoman={state.settings.romanization} />
@@ -256,7 +225,6 @@ export default function Review({ state, setState, items }: Props) {
         {mode === "recall" ? (
           <>
             <div className="en" style={{ fontSize: 20 }}>{item.en}</div>
-            <div className="small">Say it in Korean — polite form if it matters.</div>
             {revealed ? (
               <>
                 <Ko text={item.ko} size="big" showRoman={state.settings.romanization} />
@@ -268,13 +236,7 @@ export default function Review({ state, setState, items }: Props) {
         ) : null}
 
         <div className="row" style={{ marginTop: 8, justifyContent: "flex-end" }}>
-          {!revealed ? (
-            <Btn variant="primary" onClick={() => setRevealed(true)}>
-              Show answer <span className="small">(space)</span>
-            </Btn>
-          ) : (
-            <span className="small">Now pick the button that matches what just happened ↓</span>
-          )}
+          {!revealed ? <Btn variant="primary" onClick={() => setRevealed(true)}>Show answer</Btn> : null}
         </div>
       </div>
 
@@ -282,35 +244,16 @@ export default function Review({ state, setState, items }: Props) {
         <div className="grades" style={{ marginTop: 14 }}>
           {([1, 2, 3, 4] as Grade[]).map((g) => {
             const labels = { 1: "Again", 2: "Hard", 3: "Good", 4: "Easy" }
-            const hint = { 1: "no idea", 2: "barely", 3: "got it", 4: "instant" }
             return (
-              <button key={g} className={"btn g" + g} onClick={() => grade(g)} title={"Key " + g + " — " + hint[g]}>
-                <span>
-                  {labels[g]} <span className="mono small">({g})</span>
-                </span>
-                <small>{hint[g]}</small>
-                <small>back in {previews[g]}</small>
+              <button key={g} className={"btn g" + g} onClick={() => grade(g)} title={"Key " + g}>
+                <span>{labels[g]}</span>
+                <small>{previews[g]}</small>
               </button>
             )
           })}
         </div>
       ) : null}
 
-      <p className="small" style={{ marginTop: 14 }}>
-        Whichever grade you pick, the card returns at the time shown on that button — a minute for “Again”, days or weeks
-        for “Easy”. Grade what actually happened: marking “Easy” what you struggled with is the one thing that breaks the
-        schedule.
-      </p>
-      <details style={{ marginTop: 8 }}>
-        <summary className="small">Scheduler details (FSRS-6)</summary>
-        <p className="small">
-          Phase <span className="mono">{cardState.phase}</span> · stability{" "}
-          <span className="mono">{cardState.stability.toFixed(2)}d</span> · difficulty{" "}
-          <span className="mono">{cardState.difficulty.toFixed(1)}</span>
-          {r !== null ? <> · current chance of recall <span className="mono">{Math.round(r * 100)}%</span></> : null}. The
-          scheduler is re-estimating the moment your memory would fail; these numbers are its working, not your score.
-        </p>
-      </details>
     </div>
   )
 }
