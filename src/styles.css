@@ -11,7 +11,7 @@
   --line-2: rgba(255, 255, 255, 0.13);
   --ink: #e9ecf4;
   --muted: #9aa3b7;
-  --dim: #6d768c;
+  --dim: #838ca0;
   --accent: #ff6b5b;
   --accent-soft: rgba(255, 107, 91, 0.14);
   --jade: #43d19e;
@@ -39,6 +39,9 @@ body::before {
 }
 
 * { box-sizing: border-box; }
+
+/* Buttons do not inherit text colour from the UA stylesheet — without this, dark-on-dark. */
+button { color: inherit; font: inherit; }
 
 ::selection { background: rgba(255, 107, 91, 0.35); }
 
@@ -103,6 +106,7 @@ a:hover { text-decoration: underline; }
 .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
 .btn.primary { background: var(--accent); border-color: transparent; color: #2a0e0a; font-weight: 650; }
 .btn.primary:hover { background: #ff7d6f; }
+.btn.primary .small, .btn.primary small { color: rgba(48, 17, 12, 0.72); }
 .btn.ghost { background: transparent; }
 .btn.jade { background: var(--jade-soft); border-color: rgba(67,209,158,.35); color: #bff4e2; }
 .btn.tiny { padding: 4px 9px; font-size: 12px; border-radius: 8px; }
@@ -163,16 +167,18 @@ label.field { display: block; font-size: 12.5px; color: var(--dim); margin-botto
 .g4 { border-color: rgba(111,141,255,.35) !important; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
-.chip { border: 1px solid var(--line-2); border-radius: 9px; padding: 5px 10px; font-size: 13px; cursor: pointer; background: var(--bg-2); }
+.chip { border: 1px solid var(--line-2); border-radius: 9px; padding: 5px 10px; font-size: 13px; cursor: pointer; background: var(--bg-2); color: var(--ink); }
 .chip.w { border-color: rgba(67,209,158,.3); }
 .chip.e { border-color: rgba(240,185,91,.3); color: #f4d79f; }
 .chip.u { border-color: rgba(255,107,91,.4); color: #ffb3a9; }
 .chip .g { display: block; font-size: 11px; color: var(--dim); }
+.chip:hover { border-color: var(--accent); }
+.chip .ko { color: var(--ink); }
 
 .jamos { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
-.jamo { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: var(--panel); cursor: pointer; text-align: center; }
+.jamo { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: var(--panel); color: var(--ink); cursor: pointer; text-align: center; }
 .jamo:hover { border-color: var(--accent); }
-.jamo b { display: block; font-family: var(--ko-font); font-size: 26px; }
+.jamo b { display: block; font-family: var(--ko-font); font-size: 26px; color: var(--ink); }
 .jamo span { color: var(--dim); font-size: 11px; }
 
 .drill { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--ko-font); font-size: 30px; }
