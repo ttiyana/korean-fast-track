@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Btn, Panel, Pill, Ring, Bar } from "../components/ui"
+import { Btn, Panel, Pill, Ring, Bar, Stat } from "../components/ui"
 import { koreanVoices, speak } from "../lib/speech"
 import { dueSummary, todayKey, coverageEstimate, syncNow, pushState } from "../lib/store"
 import type { AppState } from "../lib/store"
@@ -91,26 +91,10 @@ export default function Progress({ state, setState, items }: Props) {
       </p>
 
       <div className="grid c4">
-        <Panel>
-          <div className="kicker">Cards started</div>
-          <div style={{ fontSize: 28, fontWeight: 650 }}>{started}</div>
-          <div className="small">of {items.length} items · {learning} learning</div>
-        </Panel>
-        <Panel>
-          <div className="kicker">Solid (in review)</div>
-          <div style={{ fontSize: 28, fontWeight: 650 }}>{solid}</div>
-          <div className="small">{known.size} distinct items</div>
-        </Panel>
-        <Panel>
-          <div className="kicker">Retention</div>
-          <div style={{ fontSize: 28, fontWeight: 650 }}>{retention}%</div>
-          <div className="small">{totalReviews} reviews all-time</div>
-        </Panel>
-        <Panel>
-          <div className="kicker">Study time</div>
-          <div style={{ fontSize: 28, fontWeight: 650 }}>{Math.round(totalMinutes / 60)}h</div>
-          <div className="small">{state.streak.current}-day streak · best {state.streak.best}</div>
-        </Panel>
+        <Stat label="Cards started" value={started} sub={"of " + items.length + " items · " + learning + " learning"} />
+        <Stat label="Solid (in review)" value={solid} sub={known.size + " distinct items"} />
+        <Stat label="Retention" value={retention} unit="%" sub={totalReviews + " reviews all-time"} />
+        <Stat label="Study time" value={Math.round(totalMinutes / 60)} unit="h" sub={state.streak.current + "-day streak · best " + state.streak.best} />
       </div>
 
       <div className="grid c2" style={{ marginTop: 14 }}>
@@ -133,11 +117,11 @@ export default function Progress({ state, setState, items }: Props) {
         </Panel>
 
         <Panel title="Coverage estimate">
-          <div className="row" style={{ gap: 20 }}>
-            <Ring value={coverage} label={coverage + "%"} sub="of spoken Korean" />
-            <div className="stack" style={{ flex: 1 }}>
+          <div className="row" style={{ gap: 24, flexWrap: "nowrap", alignItems: "flex-start" }}>
+            <Ring value={coverage} label={String(coverage)} caption="of spoken Korean" size={140} />
+            <div className="stack" style={{ flex: 1, minWidth: 0 }}>
               <div>
-                <div className="row between small"><span>~75% (top 1,000 items)</span><span className="mono">{Math.min(100, Math.round((known.size / 1000) * 100))}%</span></div>
+                <div className="row between small"><span>~75% recall band (1,000 items)</span><span className="mono">{Math.min(100, Math.round((known.size / 1000) * 100))}%</span></div>
                 <Bar value={known.size} max={1000} />
               </div>
               <div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { PRINCIPLES, PHASES, MILESTONES, DAILY } from "../data/plan"
 import { SOURCES } from "../data/grammar"
-import { Btn, Panel, Pill, Ring, Bar } from "../components/ui"
+import { Btn, Panel, Pill, Ring, Bar, Stat } from "../components/ui"
 import { dueSummary, todayKey, ensureDay, coverageEstimate, pushState } from "../lib/store"
 import type { AppState } from "../lib/store"
 import type { Item } from "../lib/deck"
@@ -61,7 +61,7 @@ export default function Plan({ state, setState, items, go }: Props) {
           </p>
         </div>
         <div className="stack" style={{ alignItems: "center" }}>
-          <Ring value={coverage} label={coverage + "%"} sub="estimated coverage of spoken Korean" />
+          <Ring value={coverage} label={String(coverage)} caption="estimated coverage of spoken Korean" />
           <div className="row" style={{ gap: 6, justifyContent: "center" }}>
             <Pill tone="red">{state.streak.current} day streak</Pill>
             <Pill tone="jade">{knownItems} items solid</Pill>
@@ -70,26 +70,27 @@ export default function Plan({ state, setState, items, go }: Props) {
       </div>
 
       <div className="grid c4" style={{ marginTop: 22 }}>
-        <Panel>
-          <div className="kicker">Due today</div>
-          <div style={{ fontSize: 28, fontWeight: 650 }}>{summary.due.length + summary.learning.length}</div>
-          <div className="small">{summary.learning.length} in learning steps</div>
-        </Panel>
-        <Panel>
-          <div className="kicker">New available</div>
-          <div style={{ fontSize: 28, fontWeight: 650 }}>{summary.newCards.length}</div>
-          <div className="small">limited to {state.settings.newPerDay}/day in review</div>
-        </Panel>
-        <Panel>
-          <div className="kicker">Today</div>
-          <div style={{ fontSize: 28, fontWeight: 650 }}>{day.reviewed}</div>
-          <div className="small">{day.reviewed > 0 ? Math.round((day.correct / Math.max(day.reviewed, 1)) * 100) + "% correct" : "not started yet"}</div>
-        </Panel>
-        <Panel>
-          <div className="kicker">Total study time</div>
-          <div style={{ fontSize: 28, fontWeight: 650 }}>{Math.round(minutes)}m</div>
-          <div className="small">{Math.round(minutes / 60)} hours logged of ~300 for drama fluency</div>
-        </Panel>
+        <Stat
+          label="Due today"
+          value={summary.due.length + summary.learning.length}
+          sub={summary.learning.length + " in learning steps"}
+        />
+        <Stat
+          label="New available"
+          value={summary.newCards.length.toLocaleString("en-US")}
+          sub={"released " + state.settings.newPerDay + " a day in Review"}
+        />
+        <Stat
+          label="Reviewed today"
+          value={day.reviewed}
+          sub={day.reviewed > 0 ? Math.round((day.correct / Math.max(day.reviewed, 1)) * 100) + "% recalled" : "nothing yet — the queue is ready"}
+        />
+        <Stat
+          label="Study time"
+          value={Math.round(minutes)}
+          unit="min"
+          sub={Math.round(minutes / 60) + " h logged of ~300 h for drama fluency"}
+        />
       </div>
 
       <Panel title="The daily loop" right={<Pill>60–90 min</Pill>}>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useId, useState } from "react"
 import { romanize } from "../lib/hangul"
 import { speak } from "../lib/speech"
 
@@ -86,37 +86,72 @@ export function Bar({ value, max, blue }: { value: number; max: number; blue?: b
   )
 }
 
-export function Ring({ value, label, sub }: { value: number; label: string; sub?: string }) {
-  const r = 54
+/** Progress ring. The caption lives outside the circle so nothing ever overflows the arc. */
+export function Ring({
+  value,
+  label,
+  unit = "%",
+  caption,
+  size = 156,
+}: {
+  value: number
+  label?: string
+  unit?: string
+  caption?: string
+  size?: number
+}) {
+  const gid = "ring-grad-" + useId().replace(/:/g, "")
+  const stroke = 12
+  const r = (size - stroke) / 2 - 3
   const c = 2 * Math.PI * r
   const pct = Math.max(0, Math.min(100, value))
   return (
-    <div className="ring">
-      <svg width="128" height="128">
-        <circle cx="64" cy="64" r={r} fill="none" stroke="rgba(255,255,255,.08)" strokeWidth="9" />
-        <circle
-          cx="64"
-          cy="64"
-          r={r}
-          fill="none"
-          stroke="url(#g)"
-          strokeWidth="9"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={c - (pct / 100) * c}
-        />
-        <defs>
-          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#ff6b5b" />
-            <stop offset="100%" stopColor="#f0b95b" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="val">
-        <b>{label}</b>
-        {sub ? <span>{sub}</span> : null}
+    <div className="ring-wrap">
+      <div className="ring" style={{ width: size, height: size }}>
+        <svg width={size} height={size} role="img" aria-label={(label ?? String(pct)) + unit + (caption ? " " + caption : "")}>
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,.07)" strokeWidth={stroke} />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke={"url(#" + gid + ")"}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={c}
+            strokeDashoffset={c - (pct / 100) * c}
+            style={{ transition: "stroke-dashoffset .5s ease" }}
+          />
+          <defs>
+            <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#ff6b5b" />
+              <stop offset="100%" stopColor="#f0b95b" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div className="val">
+          <b>
+            {label ?? Math.round(pct)}
+            <i>{unit}</i>
+          </b>
+        </div>
       </div>
+      {caption ? <div className="ring-caption">{caption}</div> : null}
     </div>
+  )
+}
+
+/** One headline number with a fixed card shape, so a row of stats always lines up. */
+export function Stat({ label, value, unit, sub }: { label: string; value: React.ReactNode; unit?: string; sub?: string }) {
+  return (
+    <section className="panel stat">
+      <div className="kicker">{label}</div>
+      <div className="num">
+        {value}
+        {unit ? <small>{unit}</small> : null}
+      </div>
+      {sub ? <div className="sub">{sub}</div> : null}
+    </section>
   )
 }
 
