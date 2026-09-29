@@ -198,6 +198,18 @@ details summary { cursor: pointer; font-weight: 550; }
 details[open] summary { margin-bottom: 10px; }
 details p { margin: 8px 0 0; color: var(--muted); font-size: 13.5px; }
 
+.howto {
+  border: 1px solid rgba(111, 141, 255, 0.28);
+  background: linear-gradient(180deg, rgba(111, 141, 255, 0.09), rgba(111, 141, 255, 0.03));
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.howto b { color: var(--ink); }
+.howto ol { margin: 8px 0 6px; padding-left: 20px; color: var(--muted); font-size: 13.5px; }
+.howto ol li { margin-bottom: 4px; }
+.howto ol li b { color: var(--ink); }
+
 .warn { border: 1px solid rgba(240,185,91,.35); background: rgba(240,185,91,.08); color: #f4d79f; border-radius: 12px; padding: 10px 13px; font-size: 13px; }
 .ok { border: 1px solid rgba(67,209,158,.35); background: var(--jade-soft); color: #b6f0dc; border-radius: 12px; padding: 10px 13px; font-size: 13px; }
 .bad { border: 1px solid rgba(255,107,91,.35); background: var(--accent-soft); color: #ffc3ba; border-radius: 12px; padding: 10px 13px; font-size: 13px; }

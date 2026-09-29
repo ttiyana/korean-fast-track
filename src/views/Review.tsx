@@ -159,17 +159,54 @@ export default function Review({ state, setState, items }: Props) {
 
   const item = current.item
   const mode: CardMode = current.card.mode
+  const helpVisible = !state.settings.reviewHelpDismissed
   const r = cardState.phase === "review" ? retrievability(cardState.stability, (Date.now() - (cardState.last ?? 0)) / 86400000) : null
 
   return (
     <div>
+      {helpVisible ? (
+        <div className="howto">
+          <div className="row between" style={{ alignItems: "flex-start" }}>
+            <div>
+              <b>How a review works — three steps</b>
+              <ol>
+                <li>
+                  <b>Read the Korean and say it out loud</b>, even if you are guessing. Saying it is what moves it into
+                  your mouth, not just your eyes.
+                </li>
+                <li>
+                  <b>Tap “Show answer”</b> (or press <span className="mono">space</span>) to check yourself.
+                </li>
+                <li>
+                  <b>Grade yourself honestly</b> with the four buttons, or keys <span className="mono">1–4</span>. “Again”
+                  means you had no idea, “Easy” means it was instant.
+                </li>
+              </ol>
+              <div className="small">
+                Your grade is the only thing that decides when the card comes back — nothing here is a test you can fail.
+                Grading “Again” is useful information, not a penalty.
+              </div>
+            </div>
+            <Btn
+              className="tiny"
+              variant="ghost"
+              onClick={() => setState((s) => ({ ...s, settings: { ...s.settings, reviewHelpDismissed: true } }))}
+            >
+              Got it, hide this
+            </Btn>
+          </div>
+        </div>
+      ) : null}
+
       <div className="row between" style={{ marginBottom: 10 }}>
         <div className="row" style={{ gap: 8 }}>
           <Pill tone="amber">{kindLabel(item.kind)}</Pill>
           <Pill>{MODE_LABEL[mode]}</Pill>
           {item.tier ? <Pill tone="blue">tier {item.tier}</Pill> : null}
         </div>
-        <span className="small mono">{index + 1} / {queue.length}</span>
+        <span className="small mono">
+          card {index + 1} of {queue.length}
+        </span>
       </div>
       <Bar value={index} max={queue.length} blue />
 
@@ -190,7 +227,9 @@ export default function Review({ state, setState, items }: Props) {
                 {item.note ? <div className="small">{item.note}</div> : null}
               </>
             ) : (
-              <div className="small">Say it out loud, then reveal.</div>
+              <div className="small">
+                Say it out loud — the meaning and the sound — then reveal to check yourself.
+              </div>
             )}
           </>
         ) : null}
@@ -228,12 +267,14 @@ export default function Review({ state, setState, items }: Props) {
           </>
         ) : null}
 
-        <div className="row between" style={{ marginTop: 8 }}>
-          <span className="small mono">
-            {cardState.phase === "new" ? "new card" : cardState.phase + " · S " + cardState.stability.toFixed(1) + "d · D " + cardState.difficulty.toFixed(1)}
-            {r !== null ? " · recall " + Math.round(r * 100) + "%" : ""}
-          </span>
-          {!revealed ? <Btn variant="primary" onClick={() => setRevealed(true)}>Show answer <span className="small">(space)</span></Btn> : null}
+        <div className="row" style={{ marginTop: 8, justifyContent: "flex-end" }}>
+          {!revealed ? (
+            <Btn variant="primary" onClick={() => setRevealed(true)}>
+              Show answer <span className="small">(space)</span>
+            </Btn>
+          ) : (
+            <span className="small">Now pick the button that matches what just happened ↓</span>
+          )}
         </div>
       </div>
 
@@ -241,10 +282,14 @@ export default function Review({ state, setState, items }: Props) {
         <div className="grades" style={{ marginTop: 14 }}>
           {([1, 2, 3, 4] as Grade[]).map((g) => {
             const labels = { 1: "Again", 2: "Hard", 3: "Good", 4: "Easy" }
+            const hint = { 1: "no idea", 2: "barely", 3: "got it", 4: "instant" }
             return (
-              <button key={g} className={"btn g" + g} onClick={() => grade(g)}>
-                <span>{labels[g]}</span>
-                <small>{previews[g]} <span className="mono">({g})</span></small>
+              <button key={g} className={"btn g" + g} onClick={() => grade(g)} title={"Key " + g + " — " + hint[g]}>
+                <span>
+                  {labels[g]} <span className="mono small">({g})</span>
+                </span>
+                <small>{hint[g]}</small>
+                <small>back in {previews[g]}</small>
               </button>
             )
           })}
@@ -252,9 +297,20 @@ export default function Review({ state, setState, items }: Props) {
       ) : null}
 
       <p className="small" style={{ marginTop: 14 }}>
-        Intervals come from the FSRS-6 scheduler: {formatInterval(cardState.phase === "new" ? 0 : cardState.stability)} of
-        stability on this card. Grade honestly — an inflated "Easy" is how review debt starts.
+        Whichever grade you pick, the card returns at the time shown on that button — a minute for “Again”, days or weeks
+        for “Easy”. Grade what actually happened: marking “Easy” what you struggled with is the one thing that breaks the
+        schedule.
       </p>
+      <details style={{ marginTop: 8 }}>
+        <summary className="small">Scheduler details (FSRS-6)</summary>
+        <p className="small">
+          Phase <span className="mono">{cardState.phase}</span> · stability{" "}
+          <span className="mono">{cardState.stability.toFixed(2)}d</span> · difficulty{" "}
+          <span className="mono">{cardState.difficulty.toFixed(1)}</span>
+          {r !== null ? <> · current chance of recall <span className="mono">{Math.round(r * 100)}%</span></> : null}. The
+          scheduler is re-estimating the moment your memory would fail; these numbers are its working, not your score.
+        </p>
+      </details>
     </div>
   )
 }

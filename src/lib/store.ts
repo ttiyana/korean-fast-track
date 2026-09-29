@@ -8,6 +8,7 @@ import type { Item, Card } from "./deck"
 export type DayStat = { reviewed: number; correct: number; newItems: number; minutes: number }
 
 export type Settings = {
+  reviewHelpDismissed: boolean
   newPerDay: number
   romanization: boolean
   autoSpeak: boolean
@@ -55,6 +56,7 @@ export function defaultState(): AppState {
     streak: { current: 0, best: 0, lastDay: "" },
     totalMinutes: 0,
     settings: {
+      reviewHelpDismissed: false,
       newPerDay: 15,
       romanization: true,
       autoSpeak: true,
