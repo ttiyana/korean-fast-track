@@ -88,6 +88,8 @@ a:hover { text-decoration: underline; }
 /* Inside a grid the gap already spaces items — the adjacency margin would break equal heights. */
 .grid > .panel + .panel, .grid > .stat + .stat { margin-top: 0; }
 .grid { display: grid; gap: 14px; align-items: stretch; }
+/* A block that follows a grid needs its own breathing room (the adjacency rule only covers panel+panel). */
+.grid + .panel, .grid + .stat, .grid + details { margin-top: 18px; }
 .grid.c2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid.c3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid.c4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
